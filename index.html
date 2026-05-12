@@ -1,11 +1,82 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Hello Web</title>
+<meta charset="utf-8">
+<title>Vue Responsive Sample</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<style>
+body{font-family:sans-serif;margin:20px;}
+.container{display:flex;gap:20px;flex-wrap:wrap;}
+.card{background:#fff;padding:15px;border:1px solid #ccc;border-radius:8px;flex:1 1 250px;}
+.mobile{background:#eef;}
+.pc{background:#efe;}
+</style>
 </head>
+
 <body>
-  <h1>Hello Web from GitHub Pages!</h1>
-  <p>これは社内向けのお試しページです。</p>
+<div id="app">
+
+  <h2>画面幅：{{ width }}px（{{ isMobile ? "スマホ" : "PC" }}判定）</h2>
+
+  <div class="container">
+
+    <!-- ✅ 画面幅に応じて UI を動的に切り替える -->
+    <div class="card" :class="isMobile ? 'mobile' : 'pc'">
+      <h3>UI 切り替え</h3>
+      <p v-if="isMobile">これはスマホ向けの表示です。</p>
+      <p v-else>これはPC向けの表示です。</p>
+    </div>
+
+    <!-- ✅ レスポンシブに応じてコンポーネントを切り替える -->
+    <component :is="isMobile ? 'mobile-card' : 'pc-card'"></component>
+
+  </div>
+
+</div>
+
+<script>
+const MobileCard = {
+  template: `
+    <div class="card mobile">
+      <h3>スマホ用コンポーネント</h3>
+      <p>画面幅が狭いので簡易表示です。</p>
+    </div>
+  `
+}
+
+const PcCard = {
+  template: `
+    <div class="card pc">
+      <h3>PC用コンポーネント</h3>
+      <p>画面幅が広いので詳細表示です。</p>
+    </div>
+  `
+}
+
+const app = Vue.createApp({
+  components: {
+    'mobile-card': MobileCard,
+    'pc-card': PcCard
+  },
+  data() {
+    return {
+      width: window.innerWidth
+    }
+  },
+  computed: {
+    isMobile() {
+      return this.width <= 600
+    }
+  },
+  mounted() {
+    window.addEventListener("resize", () => {
+      this.width = window.innerWidth
+    })
+  }
+})
+
+app.mount('#app')
+</script>
+
 </body>
 </html>
