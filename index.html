@@ -3,39 +3,68 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vue Responsive Sample (Apple対応2)</title>
+<title>Vue Responsive Sample (Apple対応 final)</title>
 
 <!-- Bootstrap -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
 <style>
-body{font-family:sans-serif;margin:20px;}
-.card-box{padding:15px;border-radius:8px;border:1px solid #ccc;}
-.mobile{background:#eef;}
-.tablet{background:#ffe;}
-.pc{background:#efe;}
+body { font-family: sans-serif; margin: 20px; background-color: #f8f9fa; }
+.card-box { padding: 20px; border-radius: 12px; border: 2px solid #ccc; transition: all 0.3s ease; height: 100%; }
+.mobile { background: #eef2ff; border-color: #4f46e5; }
+.tablet { background: #fffbeb; border-color: #d97706; }
+.pc { background: #f0fdf4; border-color: #16a34a; }
+
+/* デバッグパネル用 */
+.debug-panel {
+    background: #333; color: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px;
+}
+.btn-group-custom { margin-top: 10px; }
 </style>
 </head>
 
 <body>
 <div id="app">
 
-  <h1>🍏 apple対応2</h1>
+  <div class="debug-panel">
+    <h5>🛠 デバッグ情報</h5>
+    <p class="mb-1">実際の画面幅: <strong>{{ realWidth }}px</strong></p>
+    <p class="mb-2">現在の判定モード: <span class="badge bg-primary">{{ isManual ? '手動' : '自動' }}</span></p>
+    
+    <div class="btn-group w-100" role="group">
+      <button @click="setManualMode('mobile')" class="btn btn-outline-light btn-sm" :class="{active: deviceType === 'mobile'}">スマホ</button>
+      <button @click="setManualMode('tablet')" class="btn btn-outline-light btn-sm" :class="{active: deviceType === 'tablet'}">タブレット</button>
+      <button @click="setManualMode('pc')" class="btn btn-outline-light btn-sm" :class="{active: deviceType === 'pc'}">PC</button>
+      <button @click="resetToAuto" class="btn btn-warning btn-sm">自動判定に戻す</button>
+    </div>
+  </div>
 
-  <h2>画面幅：{{ width }}px（判定：{{ deviceType }}）</h2>
+  <header class="mb-4">
+    <h1>🍏 Apple対応 final</h1>
+    <p class="text-muted">iPhoneの「デスクトップ表示(980px)」をタブレット枠に収める設定済み</p>
+  </header>
 
   <div class="container">
-    <div class="row g-3">
+    <div class="row g-4">
 
-      <!-- UI 切り替え -->
+      <!-- UI 表示切り替え -->
       <div class="col-12 col-md-6">
         <div class="card-box" :class="deviceType">
-          <h3>UI 切り替え</h3>
-          <p v-if="deviceType === 'mobile'">これはスマホ向けの表示です。</p>
-          <p v-else-if="deviceType === 'tablet'">これはタブレット向けの表示です。</p>
-          <p v-else>これはPC向けの表示です。</p>
+          <h3>📱 判定：{{ deviceType.toUpperCase() }}</h3>
+          <hr>
+          <div v-if="deviceType === 'mobile'">
+            <p><strong>スマホ向け表示</strong></p>
+            <ul><li>シングルカラム構成</li><li>ボタンを大きく配置</li></ul>
+          </div>
+          <div v-else-if="deviceType === 'tablet'">
+            <p><strong>タブレット向け表示</strong></p>
+            <p>iPhoneのデスクトップ用表示もここに含まれます。2カラム構成に適しています。</p>
+          </div>
+          <div v-else>
+            <p><strong>PC向け表示</strong></p>
+            <p>1024px以上の広大な画面を活かした詳細な情報を表示します。</p>
+          </div>
         </div>
       </div>
 
@@ -50,32 +79,10 @@ body{font-family:sans-serif;margin:20px;}
 </div>
 
 <script>
-const MobileCard = {
-  template: `
-    <div class="card-box mobile">
-      <h3>スマホ用コンポーネント</h3>
-      <p>画面幅が狭いので簡易表示です。</p>
-    </div>
-  `
-}
-
-const TabletCard = {
-  template: `
-    <div class="card-box tablet">
-      <h3>タブレット用コンポーネント</h3>
-      <p>中間サイズの画面向けの表示です。</p>
-    </div>
-  `
-}
-
-const PcCard = {
-  template: `
-    <div class="card-box pc">
-      <h3>PC用コンポーネント</h3>
-      <p>画面幅が広いので詳細表示です。</p>
-    </div>
-  `
-}
+// コンポーネント定義
+const MobileCard = { template: `<div class="card-box mobile"><h3>Card: Mobile</h3><p>省スペースな縦長レイアウトです。</p></div>` }
+const TabletCard = { template: `<div class="card-box tablet"><h3>Card: Tablet</h3><p>要素を横に並べる余裕が出てきました。</p></div>` }
+const PcCard = { template: `<div class="card-box pc"><h3>Card: PC</h3><p>すべてのサイドバーや詳細機能が表示されます。</p></div>` }
 
 const app = Vue.createApp({
   components: {
@@ -85,46 +92,52 @@ const app = Vue.createApp({
   },
   data() {
     return {
-      width: window.innerWidth,
-      deviceType: "pc"
+      realWidth: window.innerWidth,
+      deviceType: "pc",
+      isManual: false // 手動切り替え中かどうかのフラグ
     }
   },
   computed: {
     componentName() {
-      return {
-        mobile: "mobile-card",
-        tablet: "tablet-card",
-        pc: "pc-card"
-      }[this.deviceType]
+      return this.deviceType + "-card";
     }
   },
   methods: {
     updateDeviceType() {
-      this.width = window.innerWidth
+      this.realWidth = window.innerWidth;
+      
+      // 手動モード時は自動更新をスキップ
+      if (this.isManual) return;
 
-      // Bootstrap準拠ブレークポイント
-      // mobile: 〜575.98
-      // tablet: 576〜991.98
-      // pc: 992〜
+      // --- Apple対応ロジック ---
+      // iPhoneのデスクトップ表示(980px)をタブレットに含めるため、PCの境界を1024に。
       if (window.matchMedia("(max-width: 575.98px)").matches) {
-        this.deviceType = "mobile"
-      } else if (window.matchMedia("(max-width: 991.98px)").matches) {
-        this.deviceType = "tablet"
+        this.deviceType = "mobile";
+      } else if (window.matchMedia("(max-width: 1023.98px)").matches) {
+        this.deviceType = "tablet";
       } else {
-        this.deviceType = "pc"
+        this.deviceType = "pc";
       }
+    },
+    setManualMode(type) {
+      this.isManual = true;
+      this.deviceType = type;
+    },
+    resetToAuto() {
+      this.isManual = false;
+      this.updateDeviceType();
     }
   },
   mounted() {
-    this.updateDeviceType()
-    window.addEventListener("resize", this.updateDeviceType)
+    this.updateDeviceType();
+    window.addEventListener("resize", this.updateDeviceType);
   },
   beforeUnmount() {
-    window.removeEventListener("resize", this.updateDeviceType)
+    window.removeEventListener("resize", this.updateDeviceType);
   }
-})
+});
 
-app.mount('#app')
+app.mount('#app');
 </script>
 
 </body>
